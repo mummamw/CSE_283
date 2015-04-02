@@ -65,6 +65,18 @@ final class HttpRequest implements Runnable {
 		StringTokenizer tokens = new StringTokenizer(requestLine);
 		String method = tokens.nextToken(); // skip over the method, which
 											// should be "GET"
+		//Post method provided in class.
+		//data size = total-header-footer
+		if (method.equals("POST")) {       //Post method in play
+			String line = br.readLine();   //
+			while(line != null){           //
+				line = br.readLine();      //
+			}
+			//another while section 
+			is.reset();
+		}
+		
+		
 		String fileName = tokens.nextToken();
 
 		// Prepend a "." so that file request is within the current directory.
