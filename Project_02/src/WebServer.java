@@ -48,6 +48,8 @@ final class HttpRequest implements Runnable {
 	private void processRequest() throws Exception {
 
 		int total = getContent();
+		String name = null;
+		int index = 0;
 
 		// Get a reference to the socket's input and output streams.
 		// InputStream is = socket.getInputStream();
@@ -65,18 +67,41 @@ final class HttpRequest implements Runnable {
 		StringTokenizer tokens = new StringTokenizer(requestLine);
 		String method = tokens.nextToken(); // skip over the method, which
 											// should be "GET"
+		
+//====================Post Request =============================================
 		//Post method provided in class.
 		//data size = total-header-footer
+		/*
 		if (method.equals("POST")) {       //Post method in play
-			String line = br.readLine();   //
-			while(line != null){           //
-				line = br.readLine();      //
+			String line = br.readLine();   
+			while(!line.startsWith("­­­­­­WebKitFormat")){           
+				line = br.readLine();      
 			}
-			//another while section 
-			is.reset();
+			while(!line.startsWith("“­­­­­­WebKitFormat")){           
+				line = br.readLine();      
+			}
+			line = br.readLine();
+			line = br.readLine();
+			name = br.readLine(); 
+			is.reset();                   //Name of file grabbed
+			
+			//Getting the data
+			
+			//make a file
+			
+			//save file
+			
+			//send confirmation to the client
 		}
 		
+		*/
 		
+		if (method.equals("POST")) {
+			String line = br.readLine();
+			index = line.length() + CRLF.length();
+		}
+		else{	
+//=====================Get Request Stuff========================================
 		String fileName = tokens.nextToken();
 
 		// Prepend a "." so that file request is within the current directory.
@@ -120,11 +145,12 @@ final class HttpRequest implements Runnable {
 		} else {
 			os.writeBytes(entityBody);
 		}
-
+		}
 		// Close streams and socket.
 		os.close();
 		br.close();
 		socket.close();
+		
 	}
 
 	private static void sendBytes(FileInputStream fis, OutputStream os)
