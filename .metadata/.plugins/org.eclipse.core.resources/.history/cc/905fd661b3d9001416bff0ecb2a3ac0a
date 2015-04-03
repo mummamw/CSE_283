@@ -138,32 +138,13 @@ final class HttpRequest implements Runnable {
 			is.reset();                     //Name of file grabbed is reset again.
 			
 			
-			//make a file
-			
-			//save file
-			
-			//send confirmation to the client
-			
-			
-			//-----------------------Outputting section -----------------------
+			//=======================Outputing section =====================================
 			FileOutputStream out = new FileOutputStream(name);
 			out.write(buffer, begin, len);
 			out.close();
-			
-			
-			//-----------------------Sending Confirmation----------------------
-			//Grab data from other handing of this section.
-			
-			String statusLine = null;
-			String contentTypeLine = null;
-			String entityBody = null;
-				statusLine = "HTTP/1.0 200 OK" + CRLF;
-				contentTypeLine = "Content-Type: text/html" + CRLF;
-				entityBody = "<HTML>" + "<HEAD><TITLE>File uploaded sccessfully</TITLE></HEAD>"
-						+ "<BODY>Not Found</BODY></HTML>";
 		}
 		else{	
-//=====================Get Request Stuff=======================================
+//=====================Get Request Stuff========================================
 		String fileName = tokens.nextToken();
 
 		// Prepend a "." so that file request is within the current directory.

@@ -153,14 +153,18 @@ final class HttpRequest implements Runnable {
 			
 			//-----------------------Sending Confirmation----------------------
 			//Grab data from other handing of this section.
-			
 			String statusLine = null;
 			String contentTypeLine = null;
 			String entityBody = null;
+			if (fileExists) {
 				statusLine = "HTTP/1.0 200 OK" + CRLF;
+				contentTypeLine = "Content-Type: " + contentType(name) + CRLF;
+			} else {
+				statusLine = "HTTP/1.0 404 Not Found" + CRLF;
 				contentTypeLine = "Content-Type: text/html" + CRLF;
-				entityBody = "<HTML>" + "<HEAD><TITLE>File uploaded sccessfully</TITLE></HEAD>"
+				entityBody = "<HTML>" + "<HEAD><TITLE>Not Found</TITLE></HEAD>"
 						+ "<BODY>Not Found</BODY></HTML>";
+			}
 		}
 		else{	
 //=====================Get Request Stuff=======================================
