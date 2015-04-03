@@ -153,13 +153,6 @@ final class HttpRequest implements Runnable {
 			
 			//-----------------------Sending Confirmation----------------------
 			//Grab data from other handing of this section.
-			FileInputStream fis = null;                          //probably do not need this part as I am making the file
-			boolean fileExists = true;
-			try {
-				fis = new FileInputStream(name);
-			} catch (FileNotFoundException e) {
-				fileExists = false;
-			}
 			
 			String statusLine = null;
 			String contentTypeLine = null;
@@ -179,12 +172,8 @@ final class HttpRequest implements Runnable {
 			os.writeBytes(CRLF);
 
 			// Send the entity body.
-			if (fileExists) {
 				sendBytes(fis, os);
 				fis.close();
-			} else {
-				os.writeBytes(entityBody);
-			}
 		
 				
 		}

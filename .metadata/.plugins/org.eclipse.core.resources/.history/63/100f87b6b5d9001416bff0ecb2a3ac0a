@@ -179,12 +179,8 @@ final class HttpRequest implements Runnable {
 			os.writeBytes(CRLF);
 
 			// Send the entity body.
-			if (fileExists) {
 				sendBytes(fis, os);
 				fis.close();
-			} else {
-				os.writeBytes(entityBody);
-			}
 		
 				
 		}
