@@ -48,7 +48,7 @@ final class HttpRequest implements Runnable {
 	private void processRequest() throws Exception {
 
 		int total = getContent();
-		String name = null;
+		String name = "";
 		int index = 0;
 		int begin = 0;
 		int end = 0;
@@ -72,33 +72,7 @@ final class HttpRequest implements Runnable {
 											// should be "GET"
 		
 //====================Post Request =============================================
-		//Post method provided in class.
-		//data size = total-header-footer
-		/*
-		if (method.equals("POST")) {       //Post method in play
-			String line = br.readLine();   
-			while(!line.startsWith("­­­­­­WebKitFormat")){           
-				line = br.readLine();      
-			}
-			while(!line.startsWith("“­­­­­­WebKitFormat")){           
-				line = br.readLine();      
-			}
-			line = br.readLine();
-			line = br.readLine();
-			name = br.readLine(); 
-			is.reset();                   //Name of file grabbed
-			
-			//Getting the data
-			
-			//make a file
-			
-			//save file
-			
-			//send confirmation to the client
-		}
-		
-		*/
-		
+
 		if (method.equals("POST")) {
 			String line = br.readLine();
 			
@@ -107,21 +81,38 @@ final class HttpRequest implements Runnable {
 				line = br.readLine();
 				index += line.length() + CRLF.length();	
 			}
+			line = br.readLine();
 			while(!(line.length() == 0)){
 				line = br.readLine();
 				index += line.length() + CRLF.length();	//probably incorrect. Do I have to add that empty line?
 			}
 			begin = index;
+/////////////
+/////////////
+			System.out.println("Begining is at " + begin);
+/////////////
 			
 			//Finding the end point of data
 			while(!line.startsWith("“­­­­­­WebKitFormat")){           
-				line = br.readLine();      
-				index += line.length() + CRLF.length();	
+				line = br.readLine();   
+				
+				if(line.length() == 0) {
+					index += CRLF.length();
+				}
+				else{
+				index += line.length() + CRLF.length();
+				}
 			}
 			end = index;
+/////////////
+			System.out.println("End is at " + end);
+/////////////
 			
 			//Length is just End-Beginning - Gives Data Size for writing 
 			len = end - begin;
+/////////////
+			System.out.println("Len is " + len);
+/////////////
 			is.reset();                     //Reseting input stream
 			
 			
@@ -138,10 +129,35 @@ final class HttpRequest implements Runnable {
 			is.reset();                     //Name of file grabbed is reset again.
 			
 			
-			//make a file
+			//make a file/save a file------------------------------------------
+			FileOutputStream fop = null;
+			File file;
+			String content ="This is the text content";
 			
-			//save file
-			
+			try{
+				
+				file = new File(name);
+				fop = new FileOutputStream(file);
+				
+				file.createNewFile();
+				
+				byte[] contentInBytes =  content.getBytes(); //Need to change
+				
+				fop.write(contentInBytes);
+				fop.flush();
+				fop.close();
+				
+			} catch (IOException e) {
+				e.printStackTrace();
+			} finally {
+				try {
+					if (fop != null) {
+						fop.close();
+					}
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+			}
 			//send confirmation to the client
 			
 			
@@ -151,7 +167,7 @@ final class HttpRequest implements Runnable {
 			out.close();
 			
 			
-			//-----------------------Sending Confirmation----------------------
+			//-----------------------Sending Confirmation----------------------            //Do not feel good about this section
 			//Grab data from other handing of this section.
 			FileInputStream fis = null;                          //probably do not need this part as I am making the file
 			boolean fileExists = true;
@@ -168,7 +184,6 @@ final class HttpRequest implements Runnable {
 				contentTypeLine = "Content-Type: text/html" + CRLF;
 				entityBody = "<HTML>" + "<HEAD><TITLE>File uploaded sccessfully</TITLE></HEAD>"
 						+ "<BODY>Not Found</BODY></HTML>";
-			//-----------
 			// Send the status line.
 			os.writeBytes(statusLine);
 
@@ -190,7 +205,7 @@ final class HttpRequest implements Runnable {
 		}
 		
 //=====================Get Request Stuff=======================================
-		else{
+		else {
 		String fileName = tokens.nextToken();
 
 		// Prepend a "." so that file request is within the current directory.
