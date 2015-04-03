@@ -52,7 +52,6 @@ final class HttpRequest implements Runnable {
 		int index = 0;
 		int begin = 0;
 		int end = 0;
-		int len = 0;
 
 		// Get a reference to the socket's input and output streams.
 		// InputStream is = socket.getInputStream();
@@ -102,45 +101,24 @@ final class HttpRequest implements Runnable {
 		if (method.equals("POST")) {
 			String line = br.readLine();
 			
-			//Finding the starting point of the data		
+			//Finding the starting point of the data
+			index = line.length() + CRLF.length();			
 			while(!(line.length() == 0)){
 				line = br.readLine();
-				index += line.length() + CRLF.length();	
 			}
 			while(!(line.length() == 0)){
 				line = br.readLine();
-				index += line.length() + CRLF.length();	//probably incorrect. Do I have to add that empty line?
 			}
 			begin = index;
 			
 			//Finding the end point of data
 			while(!line.startsWith("“­­­­­­WebKitFormat")){           
 				line = br.readLine();      
-				index += line.length() + CRLF.length();	
 			}
 			end = index;
 			
-			//Length is just End-Beginning - Gives Data Size for writing 
-			len = end - begin;
-			is.reset();                     //Reseting input stream
 			
 			
-			//Getting File name -Using code from before hearing about indexing
-			while(!line.startsWith("­­­­­­WebKitFormat")){           
-				line = br.readLine();      
-			}
-			while(!line.startsWith("“­­­­­­WebKitFormat")){           
-				line = br.readLine();      
-			}
-			line = br.readLine();
-			line = br.readLine();
-			name = br.readLine(); 
-			is.reset();                   //Name of file grabbed is reset again.
-			
-			
-			
-			//=======================Outputing section =====================================
-			FileOutputStream out = new FileOutputStream(name);
 			
 		}
 		else{	

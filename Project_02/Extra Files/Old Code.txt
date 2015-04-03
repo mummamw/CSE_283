@@ -1,0 +1,28 @@
+//====================Post Request =============================================
+		//Post method provided in class.
+		//data size = total-header-footer
+		/*
+		if (method.equals("POST")) {       //Post method in play
+			String line = br.readLine();   
+			while(!line.startsWith("­­­­­­WebKitFormat")){           
+				line = br.readLine();      
+			}
+			while(!line.startsWith("“­­­­­­WebKitFormat")){           
+				line = br.readLine();      
+			}
+			line = br.readLine();
+			line = br.readLine();
+			name = br.readLine(); 
+			is.reset();                   //Name of file grabbed
+			
+			//Getting the data
+			
+			//make a file
+			
+			//save file
+			
+			//send confirmation to the client
+		}
+		
+		*/
+		

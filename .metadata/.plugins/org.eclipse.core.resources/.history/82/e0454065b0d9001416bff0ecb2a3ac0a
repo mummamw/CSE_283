@@ -120,27 +120,10 @@ final class HttpRequest implements Runnable {
 			}
 			end = index;
 			
-			//Length is just End-Beginning - Gives Data Size for writing 
-			len = end - begin;
-			is.reset();                     //Reseting input stream
-			
-			
-			//Getting File name -Using code from before hearing about indexing
-			while(!line.startsWith("­­­­­­WebKitFormat")){           
-				line = br.readLine();      
-			}
-			while(!line.startsWith("“­­­­­­WebKitFormat")){           
-				line = br.readLine();      
-			}
-			line = br.readLine();
-			line = br.readLine();
-			name = br.readLine(); 
-			is.reset();                   //Name of file grabbed is reset again.
+			//Length is just End-Begining - Gives Data Size for writing 
 			
 			
 			
-			//=======================Outputing section =====================================
-			FileOutputStream out = new FileOutputStream(name);
 			
 		}
 		else{	

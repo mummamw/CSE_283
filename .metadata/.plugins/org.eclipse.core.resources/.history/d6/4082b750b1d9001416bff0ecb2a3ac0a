@@ -135,7 +135,7 @@ final class HttpRequest implements Runnable {
 			line = br.readLine();
 			line = br.readLine();
 			name = br.readLine(); 
-			is.reset();                   //Name of file grabbed is reset again.
+			is.reset();                   //Name of file grabbed
 			
 			
 			
