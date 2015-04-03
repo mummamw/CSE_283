@@ -2,7 +2,6 @@ import java.net.*;  // for Socket, ServerSocket, and InetAddress
 import java.util.zip.ZipOutputStream;
 import java.io.*;   // for IOException and Input/OutputStream
 
-
 public class CompressionServer {
 
   private static final int BUFSIZE = 1024;   // Size of receive buffer
@@ -34,20 +33,16 @@ public class CompressionServer {
         BufferedInputStream origin = null;
 		 
 		 // Create a file output stream
-        SocketOutputStream dest = new SocketOutputStream(fileOutput);
+        FileOutputStream dest = new FileOutputStream(fileOutput);
 		   
         ZipOutputStream out = new ZipOutputStream(new 
           BufferedOutputStream(dest));
 		   
         //out.setMethod(ZipOutputStream.DEFLATED);
         byte data[] = new byte[BUFFER];
-		 
-        // get a list of files from current directory
-         FileInputStream fi = new 
-           FileInputStream(fileInput);
 			
          origin = new 
-           BufferedInputStream(fi, BUFSIZE);                   //USING BUFSIZE INSTEAD OF BUFFER --- ONLY HALF THE SIZE FOR zips original
+           BufferedInputStream(fi, BUFSIZE);                   //USING BUFSIZE instead- (only half size)
 			
          ZipEntry entry = new ZipEntry("proj2.bin");
          out.putNextEntry(entry);

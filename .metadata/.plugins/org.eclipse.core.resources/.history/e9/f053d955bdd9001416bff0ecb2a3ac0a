@@ -1,7 +1,5 @@
 import java.net.*;  // for Socket, ServerSocket, and InetAddress
-import java.util.zip.ZipOutputStream;
 import java.io.*;   // for IOException and Input/OutputStream
-
 
 public class CompressionServer {
 
@@ -34,7 +32,8 @@ public class CompressionServer {
         BufferedInputStream origin = null;
 		 
 		 // Create a file output stream
-        SocketOutputStream dest = new SocketOutputStream(fileOutput);
+        FileOutputStream dest = new 
+          FileOutputStream(fileOutput);
 		   
         ZipOutputStream out = new ZipOutputStream(new 
           BufferedOutputStream(dest));
@@ -47,7 +46,7 @@ public class CompressionServer {
            FileInputStream(fileInput);
 			
          origin = new 
-           BufferedInputStream(fi, BUFSIZE);                   //USING BUFSIZE INSTEAD OF BUFFER --- ONLY HALF THE SIZE FOR zips original
+           BufferedInputStream(fi, BUFFER);
 			
          ZipEntry entry = new ZipEntry("proj2.bin");
          out.putNextEntry(entry);

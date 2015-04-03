@@ -2,7 +2,6 @@ import java.net.*;  // for Socket, ServerSocket, and InetAddress
 import java.util.zip.ZipOutputStream;
 import java.io.*;   // for IOException and Input/OutputStream
 
-
 public class CompressionServer {
 
   private static final int BUFSIZE = 1024;   // Size of receive buffer
