@@ -48,11 +48,6 @@ final class HttpRequest implements Runnable {
 	private void processRequest() throws Exception {
 
 		int total = getContent();
-		String name = "";
-		int index = 0;
-		int begin = 0;
-		int end = 0;
-		int len = 0;
 
 		// Get a reference to the socket's input and output streams.
 		// InputStream is = socket.getInputStream();
@@ -74,139 +69,88 @@ final class HttpRequest implements Runnable {
 //====================Post Request =============================================
 
 		if (method.equals("POST")) {
-			String line = br.readLine();
 			
-			//Finding the starting point of the data		
-			while(!(line.length() == 0)){
-				line = br.readLine();
-				index += line.length() + CRLF.length();	
-			}
-			line = br.readLine();
-			while(!(line.length() == 0)){
-				line = br.readLine();
-				index += line.length() + CRLF.length();	//probably incorrect. Do I have to add that empty line?
-			}
-			begin = index;
-/////////////
-/////////////
-			System.out.println("Begining is at " + begin);
-/////////////
-			
-			//Finding the end point of data
-			while(!line.startsWith("“­­­­­­WebKitFormat")){           
-				line = br.readLine();   
-				
-				if(line.length() == 0) {
-					index += CRLF.length();
-				}
-				else{
-				index += line.length() + CRLF.length();
-				}
-			}
-			end = index;
-/////////////
-			System.out.println("End is at " + end);
-/////////////
-			
-			//Length is just End-Beginning - Gives Data Size for writing 
-			len = end - begin;
-/////////////
-			System.out.println("Len is " + len);
-/////////////
-			is.reset();                     //Reseting input stream
+			FileOutputStream fos = null;
+			DataOutputStream dos = null;
+			String entityBody = null;
 			
 			
-			//Getting File name -Using code from before hearing about indexing
-			while(!line.startsWith("­­­­­­WebKitFormat")){           
-				line = br.readLine();      
-			}
-			while(!line.startsWith("“­­­­­­WebKitFormat")){           
-				line = br.readLine();      
-			}
-			line = br.readLine();
-			line = br.readLine();
-			name = br.readLine(); 
-			is.reset();                     //Name of file grabbed is reset again.
-			
-			
-			//make a file/save a file------------------------------------------
-			FileOutputStream fop = null;
-			File file;
-			String content ="This is the text content";
 			
 			try{
+				br.mark(0);
+				String line = br.readLine();
+				int index = 2 *(line.length() + CRLF.length());
 				
-				file = new File(name);
-				fop = new FileOutputStream(file);
-				
-				file.createNewFile();
-				
-				byte[] contentInBytes =  content.getBytes(); //Need to change
-				
-				fop.write(contentInBytes);
-				fop.flush();
-				fop.close();
-				
-			} catch (IOException e) {
-				e.printStackTrace();
-			} finally {
-				try {
-					if (fop != null) {
-						fop.close();
-					}
-				} catch (IOException e) {
-					e.printStackTrace();
+				//Finding the starting point of the data		
+				while(!line.startsWith("------WebKitFormBoundary")){
+					line = br.readLine();
+					index += line.length() + CRLF.length();	
 				}
-			}
-			//send confirmation to the client
-			
-			
-			//-----------------------Outputting section -----------------------
-			FileOutputStream out = new FileOutputStream(name);
-			out.write(buffer, begin, len);
-			out.close();
-			
-			
-			//-----------------------Sending Confirmation----------------------            //Do not feel good about this section
-			//Grab data from other handing of this section.
-			FileInputStream fis = null;                          //probably do not need this part as I am making the file
-			boolean fileExists = true;
-			try {
-				fis = new FileInputStream(name);
-			} catch (FileNotFoundException e) {
-				fileExists = false;
-			}
-			
-			String statusLine = null;
-			String contentTypeLine = null;
-			String entityBody = null;
-				statusLine = "HTTP/1.0 200 OK" + CRLF;
-				contentTypeLine = "Content-Type: text/html" + CRLF;
-				entityBody = "<HTML>" + "<HEAD><TITLE>File uploaded sccessfully</TITLE></HEAD>"
-						+ "<BODY>Not Found</BODY></HTML>";
-			// Send the status line.
-			os.writeBytes(statusLine);
-
-			// Send the content type line.
-			os.writeBytes(contentTypeLine);
-
-			// Send a blank line to indicate the end of the header lines.
-			os.writeBytes(CRLF);
-
-			// Send the entity body.
-			if (fileExists) {
-				sendBytes(fis, os);
-				fis.close();
-			} else {
-				os.writeBytes(entityBody);
-			}
-		
 				
+				while(!line.startsWith("------WebKitFormBoundary")){
+					line = br.readLine();
+					index += line.length() + CRLF.length();	//probably incorrect. Do I have to add that empty line?
+				}
+				
+				//Finding
+				while(line.length() != 0){           
+					line = br.readLine();      
+					index += line.length() + CRLF.length();
+				}
+	
+				//Start of the data
+				int begin = index;
+				
+				while(!line.startsWith("------WebKitFormBoundary")){
+					line = br.readLine();
+					index += line.length() + CRLF.length();	
+				}
+				
+				int end = index;
+				
+				//using the two len is given
+				int len = end - begin - (line.length() + 2 * CRLF.length());
+				
+				while (line.length() != 0) {
+					line = br.readLine();
+				}
+				
+				String nameFile = br.readLine();
+				
+				br.reset();
+				
+				is.reset();                     //Reseting input stream	
+				is.skip(begin);                 //Getting started back at the data
+				File file = new File(nameFile);
+				fos = new FileOutputStream(file);
+				dos = new DataOutputStream(fos);
+				
+				buffer = new byte[BUF_SIZE];
+				is.read(buffer, 0, len);
+				dos.write(buffer, 0, len);
+				
+				entityBody = "<HTML>" + "<HEAD><TITLE>File uploaded sccessfully</TITLE></HEAD>"
+						+ "<BODY>File Uploaded succesffuly</BODY></HTML>";
+				} catch (Exception e){
+					entityBody = "<HTML>" + "<HEAD><TITLE>File uploaded sccessfully</TITLE></HEAD>"
+							+ "<BODY>Not Found</BODY></HTML>";
+				}
+				
+			os.writeBytes(entityBody);
+			dos.close();
+			fos.close();
+			
+			return;
 		}
-		
+				
+     	String fileName = tokens.nextToken();
+	
+	   if(method.equals("POST")){
+		   
+	   }
 //=====================Get Request Stuff=======================================
 		else {
-		String fileName = tokens.nextToken();
+		
 
 		// Prepend a "." so that file request is within the current directory.
 		fileName = "." + fileName;
@@ -250,6 +194,7 @@ final class HttpRequest implements Runnable {
 			os.writeBytes(entityBody);
 		}
 		}
+		
 		// Close streams and socket.
 		os.close();
 		br.close();

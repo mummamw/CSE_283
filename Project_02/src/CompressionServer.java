@@ -6,7 +6,7 @@ import java.io.*;   // for IOException and Input/OutputStream
 
 public class CompressionServer {
 
-	 private static final int BUFSIZE = 1024;   // Size of receive buffer
+	 private static final int BUFSIZE = 1024;   // was only half of what was needed for zip?
 
 	  public static void main(String[] args) throws IOException {
 
@@ -22,50 +22,47 @@ public class CompressionServer {
 	    	
 	    	Socket clntSock = servSock.accept();
 	    	
-	    	clntSock.getInputStream();
+	    	InputStream in = clntSock.getInputStream();
 	    	
-	    	clntSock.getOutputStream();
+	    	OutputStream out = clntSock.getOutputStream();
 	    	
 	    	 BufferedInputStream origin = null;
 			 
 			 // Create a file output stream
-	         FileOutputStream dest = new FileOutputStream(fileOutput);
+	         //FileOutputStream dest = new FileOutputStream(fileOutput);
 			   
-	         ZipOutputStream out = new ZipOutputStream(new BufferedOutputStream(dest));
+	         ZipOutputStream ZipOut = new ZipOutputStream(new BufferedOutputStream(out));
 			   
 	         //out.setMethod(ZipOutputStream.DEFLATED);
-	         byte data[] = new byte[BUFSIZE];
+	         byte data[] = new byte[2 * BUFSIZE];
 			 
 	         // get a list of files from current directory
-	          FileInputStream fi = new FileInputStream(fileInput);
-				
-	          origin = new BufferedInputStream(fi, BUFSIZE);
+	         // FileInputStream fi = new FileInputStream(fileInput);
+			  
+	         try{
+	         
+	          origin = new BufferedInputStream(in, 2 * BUFSIZE);
 				
 	          ZipEntry entry = new ZipEntry("proj2.bin");
-	          out.putNextEntry(entry);
+	          
+	          ZipOut.putNextEntry(entry);
+	          
 	          int count;
-	          while((count = origin.read(data, 0, BUFFER)) != -1) {
-	             out.write(data, 0, count);
+	          
+	          
+	          while((count = origin.read(data, 0, 2 * BUFSIZE)) != -1) {
+	             ZipOut.write(data, 0, count);
+	             ZipOut.flush();
 	          }
-	         origin.close();
+	          
 	         out.close();
-	    	
-	      Socket clntSock = servSock.accept();     // Get client connection
-
-	      System.out.println("Handling client at " +
-	        clntSock.getInetAddress().getHostAddress() + " on port " +
-	             clntSock.getPort());
-
-	      InputStream in = clntSock.getInputStream();
-	      OutputStream out = clntSock.getOutputStream();
-
-	      // Receive until client closes connection, indicated by -1 return
-	      while ((recvMsgSize = in.read(byteBuffer)) != -1) {
-	        System.out.println("Received " + new String(byteBuffer));
-	        out.write(byteBuffer, 0, recvMsgSize);
-	      }
-
-	      clntSock.close();  // Close the socket.  We are done with this client!
+	         } catch(FileNotFoundException e) {
+	        	 System.out.println("No file");
+	         } catch (IOException e) {
+	             System.out.println("Wrong IO Error");
+	         }
+	           
+	      ZipOut.close();  // Close the socket.  We are done with this client!
 	    }
 	    /* NOT REACHED */
 	  }
