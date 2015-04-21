@@ -1,0 +1,4 @@
+Michael Mumma
+Project 03 CSE 283
+
+Compression Server
