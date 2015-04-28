@@ -1,0 +1,8 @@
+
+public class WSSE {
+
+	double calculateDifference(double bS, double bS){
+		return 0.0;
+	}
+	
+}

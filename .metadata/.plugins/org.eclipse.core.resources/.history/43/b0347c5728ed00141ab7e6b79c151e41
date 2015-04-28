@@ -1,0 +1,11 @@
+
+public class WSSE {
+
+	double calculateDifference(double bS, double eS){
+		return 0.0;
+	}
+	
+	void calculateScores
+	
+	
+}

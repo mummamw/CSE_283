@@ -1,0 +1,17 @@
+
+public class WSSE {
+
+	double calculateDifference(double bS, double eS){
+		
+		return math.pow(bS-eS);
+	}
+	
+	void calculateScores(double[] bA, double[] eA) {
+		
+	}
+	
+	void genReport(){
+		
+	}
+	
+}
