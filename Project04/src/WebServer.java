@@ -1,6 +1,8 @@
 import java.io.*;
 import java.net.*;
 import java.util.*;
+import java.security.*;
+import java.net.ssl.*;
 
 final class HttpRequest implements Runnable {
 	final static int BUF_SIZE = 1024000;
@@ -100,6 +102,7 @@ final class HttpRequest implements Runnable {
 		String method = tokens.nextToken(); // skip over the method, which should be
 		String fileName = tokens.nextToken();
 //====================Post Request =============================================
+
 		if (method.equals("POST")) {
             String line = "", delim = "";
             int dataLength = 0;
@@ -266,6 +269,23 @@ public final class WebServer {
 	public static void main(String argv[]) throws Exception {
 		// Get the port number from the command line.
 		int port = Integer.parseInt(argv[0]);
+
+		String ksName = "keystore.jks";
+		char ksPass[] = "password".toCharArray();
+		char ctPass[] = "password".toCharArray();
+
+		try {
+			KeyStore ks = KeyStore.getInstance("JKS");
+			ks.load(new FileInputStream(ksName), ksPass);
+			KeyManagerFactory kmf =
+				KeyManagerFactory.getInstance("SunX509");
+			kmf.init(ks, ctPass);
+			SSlContext sc = SSLContext.getInstance("SSL");
+			sc.init(kmf.getKeyManagers(), null, null);
+			SSLServerSocketFactory ssf = sc.getServerSocketFactory();
+			SSLServerSocker s = (SSLServerSockeet) ssf.createServerSocket(port);
+
+		}
 
 		// Establish the listen socket.
 		ServerSocket socket = new ServerSocket(port);
