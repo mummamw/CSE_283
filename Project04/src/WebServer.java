@@ -2,7 +2,7 @@ import java.io.*;
 import java.net.*;
 import java.util.*;
 import java.security.*;
-import java.net.ssl.*;
+import javax.net.ssl.*;
 
 final class HttpRequest implements Runnable {
 	final static int BUF_SIZE = 1024000;
@@ -15,7 +15,7 @@ final class HttpRequest implements Runnable {
 	public HttpRequest(Socket socket) throws Exception {
 		this.socket = socket;
 		buffer = new byte[BUF_SIZE];
-	}
+}
 
 	// Implement the run() method of the Runnable interface.
 	public void run() {
@@ -34,7 +34,7 @@ final class HttpRequest implements Runnable {
 			rcv = socket.getInputStream().read(buffer, total,
 				BUF_SIZE - total - 1);
 			String msg = new String(buffer, total, rcv);
-			//System.out.println(msg);
+			System.out.println(msg);
 			total += rcv;
 			
 			// Only loop if it is not a GET message and have not reached
@@ -48,14 +48,17 @@ final class HttpRequest implements Runnable {
 		return total;
 	}
 
-	//Method 
-	private void compressionSend(String fileName, byte[] data) throws Exception {
+    private void compressionSend(String fileName, byte[] data) throws Exception {
 		int port = 5000;
+
 		InetAddress address = InetAddress.getLocalHost();
+
 		DatagramSocket compServer = new DatagramSocket();
 		DatagramPacket packet = new DatagramPacket(fileName.getBytes(), 0, fileName.length(), address, port);
 		compServer.send(packet);
-		int offset = 0, count = 1;
+
+		int offset = 0;
+		int count = 1;
 
 		while (true) {
 			if (offset + 1024 > data.length) {
@@ -68,8 +71,7 @@ final class HttpRequest implements Runnable {
 			count++;
 			if (offset + 1024 > data.length) {
 				//"MAGIC String" This is like the lab when we were sending the end
-				System.out.println("End of file. Stop sending pakcets.");
-				packet.setData(new String("TERMINATE").getBytes(), 0, 9);
+				packet.setData(new String("Terminate").getBytes(), 0, 9);
 				compServer.send(packet);
 				break;
 			}
@@ -82,28 +84,33 @@ final class HttpRequest implements Runnable {
 	private void processRequest() throws Exception {
 
 		int total = getContent();
+
 		// Get a reference to the socket's input and output streams.
 		// InputStream is = socket.getInputStream();
 		InputStream is = new ByteArrayInputStream(buffer, 0, total);
 		DataOutputStream os = new DataOutputStream(socket.getOutputStream());
 
 		// Set up input stream filters.
-		//BufferedReader br = new BufferedReader(new InputStreamReader(is));
-		BufferedReader br = new BufferedReader(new InputStreamReader(is,
-			"US-ASCII"));
-
+		// BufferedReader br = new BufferedReader(new InputStreamReader(is));
+		
+		BufferedReader br = new BufferedReader(new InputStreamReader(is,"US-ASCII"));
+		
 		int byteCount = 0;
+
 		// Get the request line of the HTTP request message.
 		String requestLine = br.readLine();
-		byteCount += requestLine.length() + 2;
+		byteCount += requestLine.length() + 2;       //Difference from main code
 
 		// Extract the filename from the request line.
 		StringTokenizer tokens = new StringTokenizer(requestLine);
-		String method = tokens.nextToken(); // skip over the method, which should be
+		String method = tokens.nextToken(); // skip over the method, which
+											// should be "GET"
 		String fileName = tokens.nextToken();
-//====================Post Request =============================================
+
+//Post Request area============================================================
 
 		if (method.equals("POST")) {
+
             String line = "", delim = "";
             int dataLength = 0;
 
@@ -129,10 +136,15 @@ final class HttpRequest implements Runnable {
 				}
 			}
 
+
+
+				//br.reset();
 			is =  new ByteArrayInputStream(buffer, byteCount, dataLength);
 			br = new BufferedReader(new InputStreamReader(is, "US-ASCII"));
+
 			StringBuilder postString = new StringBuilder();
-			int bodyStart = 0, numLines = 0;
+			int bodyStart = 0;
+			int numLines = 0;
 			boolean actualBody = false;
 			boolean endBody = false;
 
@@ -140,7 +152,7 @@ final class HttpRequest implements Runnable {
 				if(line.indexOf("Content-Type") != -1) {
 					actualBody = true;
 					bodyStart += line.length() + 4;
-					line = br.readLine();           //Seems to be giving most problems moving too many
+					line = br.readLine();           
 				} else if(line.indexOf(delim) != -1) {
 					endBody = true;
 				}
@@ -169,11 +181,9 @@ final class HttpRequest implements Runnable {
 			compressionSend(postFileName, postDataBytes);
 		}
 		
-		//No idea when this was from		
-     	//String fileName = tokens.nextToken();
-//=====================Get Request Stuff=======================================
-		
 
+
+//===========================Get Request area==================================
 		// Prepend a "." so that file request is within the current directory.
 		fileName = "." + fileName;
 
@@ -193,13 +203,7 @@ final class HttpRequest implements Runnable {
 		if (fileExists) {
 			statusLine = "HTTP/1.0 200 OK" + CRLF;
 			contentTypeLine = "Content-Type: " + contentType(fileName) + CRLF;
-		}else if (method.equals("POST")) {
-			statusLine = "HTTP/1.0 200 OK" + CRLF;
-			contentTypeLine = "Content-Type: text/html" + CRLF;
-			entityBody = "<HTML>"
-					+ "<HEAD><TITLE>File Uploaded Successful</TITLE></HEAD>"
-					+ "<BODY>File Upload Successful</BODY></HTML>";
-		}	else  {
+		} else {
 			statusLine = "HTTP/1.0 404 Not Found" + CRLF;
 			contentTypeLine = "Content-Type: text/html" + CRLF;
 			entityBody = "<HTML>" + "<HEAD><TITLE>Not Found</TITLE></HEAD>"
@@ -221,13 +225,11 @@ final class HttpRequest implements Runnable {
 		} else {
 			os.writeBytes(entityBody);
 		}
-		
-		
+
 		// Close streams and socket.
 		os.close();
 		br.close();
 		socket.close();
-		
 	}
 
 	private static void sendBytes(FileInputStream fis, OutputStream os)
@@ -258,9 +260,6 @@ final class HttpRequest implements Runnable {
 		if (fileName.endsWith(".jpeg")  || fileName.endsWith(".jpg")) {
 			return "image/jpeg";
 		}
-		if (fileName.endsWith(".txt")) {
-			return "text/plain";
-		}
 		return "application/octet-stream";
 	}
 }
@@ -273,37 +272,40 @@ public final class WebServer {
 		String ksName = "keystore.jks";
 		char ksPass[] = "password".toCharArray();
 		char ctPass[] = "password".toCharArray();
-
+		
 		try {
 			KeyStore ks = KeyStore.getInstance("JKS");
 			ks.load(new FileInputStream(ksName), ksPass);
-			KeyManagerFactory kmf =
-				KeyManagerFactory.getInstance("SunX509");
+			KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
 			kmf.init(ks, ctPass);
-			SSlContext sc = SSLContext.getInstance("SSL");
+			SSLContext sc = SSLContext.getInstance("SSL");
 			sc.init(kmf.getKeyManagers(), null, null);
 			SSLServerSocketFactory ssf = sc.getServerSocketFactory();
-			SSLServerSocker s = (SSLServerSockeet) ssf.createServerSocket(port);
+			SSLServerSocket s = (SSLServerSocket) ssf.createServerSocket(port);
 
-		}
-
-		// Establish the listen socket.
-		ServerSocket socket = new ServerSocket(port);
-
-		// Process HTTP service requests in an infinite loop.
-		while (true) {
+			while (true) {
 			// Listen for a TCP connection request.
-			Socket connection = socket.accept();
+			SSLSocket c = (SSLSocket) s.accept();
 
 			// Construct an object to process the HTTP request message.
-			HttpRequest request = new HttpRequest(connection);
+			HttpRequest request = new HttpRequest(c);
 
 			// Create a new thread to process the request.
 			Thread thread = new Thread(request);
 
 			// Start the thread.
 			thread.start();
+			}
+
+			//BufferedWriter w = new BufferedWriter(new OutputStreamWriter(c.getOutputStream()));
+			//BufferedReader r = new BufferedReader(new InputStreamReader(c.getInputStream()));
+			} catch (Exception e) {
+			System.out.println(e);
 		}
+
+		
+
+		// Process HTTP service requests in an infinite loop.
+		
 	}
 }
-

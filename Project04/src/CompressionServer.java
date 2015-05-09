@@ -1,63 +1,78 @@
-import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
+import java.io.*; 
+import java.net.*;
+import java.security.*;
+import javax.net.ssl.*;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
 
-import java.io.*;
-
 public class CompressionServer {
-	
-	private static final int ECHOMAX = 65535 ;  // Maximum size of echo datagram
-	public static void main(String[] args) throws IOException {
 
-		int servPort = Integer.parseInt(args[0]);
-		DatagramSocket socket = new DatagramSocket(servPort);
-	
-		DatagramPacket packet = new DatagramPacket(new byte[ECHOMAX], ECHOMAX);
-		
-		for (;;) {  // Run forever, receiving and echoing datagrams
-			socket.receive(packet);     // Receive packet from client       
-			byte[] data = packet.getData(); //gives you a byte array of sent info
-			String fileName = new String(data, 0, packet.getLength());
-			System.out.println("Received file: " + fileName);
-			FileOutputStream fout = new FileOutputStream(fileName.trim());
-			FileOutputStream foutForZip = new FileOutputStream(fileName.trim() + ".zip");
-			ZipOutputStream zout = new ZipOutputStream(new BufferedOutputStream(foutForZip)); 
-						
-			//creates file output stream using the inputted filename
-			
-			ZipEntry zip = new ZipEntry(fileName); //again how to get filename?
-			zout.putNextEntry(zip);
-			int count = 1;
-			while(true){
-				socket.receive(packet);
-				//receive content bytes from socket
-				data = packet.getData();
-				if (new String(data, 0, packet.getLength()).equals("TERMINATE")) {
-					System.out.println("Found end of file.");
-					break;
-				}
-				fout.write(data, 0, packet.getLength()); 
-				fout.flush(); 
-				zout.write(data, 0, packet.getLength());
-				//write bytes to the file 
-				System.out.println("Wrote packet #" + count);
-				count++;
-			}
-			zout.closeEntry();
-			zout.close();
-			fout.close(); 
-			System.out.println("Finished method");
+	 private static final int ECHOMAX = 65535;   
+
+	 public static void main(String[] args) throws IOException {
+
+	 	//SSL Keytime Example based off SslEchoServer
+	 	String ksName = "keystore.jks";
+		char ksPass[] = "password".toCharArray();
+		char ctPass[] = "password".toCharArray();
+		try {
+			KeyStore ks = KeyStore.getInstance("JKS");
+			ks.load(new FileInputStream(ksName), ksPass);
+			KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
+			kmf.init(ks, ctPass);
+			SSLContext sc = SSLContext.getInstance("SSL");
+			sc.init(kmf.getKeyManagers(), null, null);
+			SSLServerSocketFactory ssf = sc.getServerSocketFactory();
+			SSLServerSocket s = (SSLServerSocket) ssf.createServerSocket(port);
 		}
-		/* NOT REACHED */
-	}
-}
+
+	    int servPort = Integer.parseInt(args[0]);
+	    DatagramSocket socket = new DatagramSocket(servPort);   // Create a server socket to accept client connection requests
+	    DatagramPacket packet = new DatagramPacket(new byte[ECHOMAX], ECHOMAX);
+	    
+	    
+	    int recvMsgSize;   // Size of received message
+	    byte[] byteBuffer = new byte[ECHOMAX];  // Receive buffer
+
+	    for (;;) { // Run forever, accepting and servicing connections
+	    	socket.receive(packet);
+	    	byte[] data = packet.getData();
+	    	String filename = new String(data, 0, packet.getLength());
+	    	System.out.println("Recieved: " + filename);
+
+	    	FileOutputStream fout = new FileOutputStream(filename.trim());
+	    	//Zipping 
+	    	FileOutputStream foutZip = new FileOutputStream(filename.trim() + ".zip");
+	    	ZipOutputStream zout = new ZipOutputStream(new BufferedOutputStream(foutZip));
+            			   
+			ZipEntry zip = new ZipEntry(filename);    // Gotten from first packet sent
+	    	zout.putNextEntry(zip);
+
+	    	int count = 1;
+	    	//getting rid of try method because exceeptions kept catching?
+	    	for(;;) {
+	    	  socket.receive(packet);
+              //Getting content
+              data = packet.getData();
+              if(new String(data, 0, packet.getLength()).equals("Terminate")) {
+              	System.out.println("End of file was found from magic string");
+              	break;
+              }    //End of if loop not for loop.
+              fout.write(data, 0, packet.getLength());
+              fout.flush();
+              zout.write(data, 0, packet.getLength());
+              count++;
+	          }
+	         zout.closeEntry(); 
+	         zout.close();
+	         fout.close();
+	     }
+	           
+	     
+	    }
+	    /* NOT REACHED */
+ }
+
+
+
+
