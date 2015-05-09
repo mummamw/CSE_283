@@ -11,34 +11,51 @@ public class CompressionServer {
 
 	 public static void main(String[] args) throws IOException {
 
-	 	//SSL Keytime Example based off SslEchoServer
-	 	String ksName = "keystore.jks";
+	    int servPort = Integer.parseInt(args[0]);
+	    //DatagramSocket socket = new DatagramSocket(servPort);   // Create a server socket to accept client connection requests
+	    //DatagramPacket packet = new DatagramPacket(new byte[ECHOMAX], ECHOMAX);
+	    
+	    
+	    int recvMsgSize;   // Size of received message
+	    byte[] byteBuffer = new byte[ECHOMAX];  // Receive buffer
+
+	    //SSL code
+	    String ksName = "keystore.jks";
 		char ksPass[] = "password".toCharArray();
 		char ctPass[] = "password".toCharArray();
-		try {
+
+
+	    for (;;) { // Run forever, accepting and servicing connections
+
+	    	try {
 			KeyStore ks = KeyStore.getInstance("JKS");
 			ks.load(new FileInputStream(ksName), ksPass);
 			KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
 			kmf.init(ks, ctPass);
 			SSLContext sc = SSLContext.getInstance("SSL");
 			sc.init(kmf.getKeyManagers(), null, null);
+
 			SSLServerSocketFactory ssf = sc.getServerSocketFactory();
-			SSLServerSocket s = (SSLServerSocket) ssf.createServerSocket(port);
-		}
+			SSLServerSocket s = (SSLServerSocket) ssf.createServerSocket(8888);
 
-	    int servPort = Integer.parseInt(args[0]);
-	    DatagramSocket socket = new DatagramSocket(servPort);   // Create a server socket to accept client connection requests
-	    DatagramPacket packet = new DatagramPacket(new byte[ECHOMAX], ECHOMAX);
-	    
-	    
-	    int recvMsgSize;   // Size of received message
-	    byte[] byteBuffer = new byte[ECHOMAX];  // Receive buffer
+			printServerSocketInfo(s);
+			SSLSocket c = (SSLSocket) s.accept();
+			printSocketInfo(c);
+			BufferedWriter w = new BufferedWriter(new OutputStreamWriter(c.getOutputStream()));
+			BufferedReader r = new BufferedReader(new InputStreamReader(c.getInputStream()));
+			
+			
 
-	    for (;;) { // Run forever, accepting and servicing connections
-	    	socket.receive(packet);
-	    	byte[] data = packet.getData();
+
+			} catch (Exception e){
+				System.err.println(e.toString());
+			}
+
+			//Deleted packet
+
+	    	//byte[] data = packet.getData();
 	    	String filename = new String(data, 0, packet.getLength());
-	    	System.out.println("Recieved: " + filename);
+	    	//System.out.println("Recieved: " + filename);
 
 	    	FileOutputStream fout = new FileOutputStream(filename.trim());
 	    	//Zipping 
