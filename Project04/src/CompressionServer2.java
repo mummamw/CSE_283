@@ -1,20 +1,20 @@
-import java.io.BufferedInputStream;
 import java.io.BufferedOutputStream;
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.DataInputStream;
-import java.io.DataOutputStream;
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.net.DatagramPacket;
-import java.net.DatagramSocket;
-import java.net.InetAddress;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
+import java.security.KeyStore;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import java.io.*;
-import java.net.*;
-import java.security.*;
-import javax.net.ssl.*;
+
+import javax.net.ssl.KeyManagerFactory;
+import javax.net.ssl.SSLContext;
+import javax.net.ssl.SSLServerSocket;
+import javax.net.ssl.SSLServerSocketFactory;
+import javax.net.ssl.SSLSocket;
 
 
 public class CompressionServer2 {
@@ -25,7 +25,7 @@ public class CompressionServer2 {
 		String ksName = "keystore.jks";
 		char ksPass[] = "password".toCharArray();
 		char ctPass[] = "password".toCharArray();
-		//try { //Don't Try just do. 
+		try { //Don't Try just do. 
 			KeyStore ks = KeyStore.getInstance("JKS");
 			ks.load(new FileInputStream(ksName), ksPass);
 			KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
@@ -48,44 +48,65 @@ public class CompressionServer2 {
 		//int servPort = Integer.parseInt(args[0]);
 		//Socket is already created as s currently
 		//DatagramSocket socket = new DatagramSocket(servPort);
-	
-		DatagramPacket packet = new DatagramPacket(new byte[ECHOMAX], ECHOMAX);
+		
+		//No longer recieving packets, It is just a stream now.
+		//DatagramPacket packet = new DatagramPacket(new byte[ECHOMAX], ECHOMAX);
 		//test
+
 		for (;;) {  // Run forever, receiving and echoing datagrams
 			//socket.receive(packet);     // Receive packet from client       
-			byte[] data = packet.getData(); //gives you a byte array of sent info
-			String fileName = new String(data, 0, packet.getLength());
+			//byte[] data = packet.getData(); //gives you a byte array of sent info
+			//String fileName = new String(data, 0, packet.getLength());
+			String fileName = new String(r.readLine());
 			System.out.println("Received file: " + fileName);
+
+
+
 			FileOutputStream fout = new FileOutputStream(fileName.trim());
 			FileOutputStream foutForZip = new FileOutputStream(fileName.trim() + ".zip");
 			ZipOutputStream zout = new ZipOutputStream(new BufferedOutputStream(foutForZip)); 
 						
-			//creates file output stream using the inputted filename
-			
-			ZipEntry zip = new ZipEntry(fileName); //again how to get filename?
+			//creates file output stream using the inputed filename
+		
+			ZipEntry zip = new ZipEntry(fileName); 
 			zout.putNextEntry(zip);
-			int count = 1;
-			while(true){
-				socket.receive(packet);
+			//int count = 1;
+			
+			String m = "";
+			//while((m=r.readLine())!= null){
+			while(true) {
+				//socket.receive(packet);
 				//receive content bytes from socket
-				data = packet.getData();
-				if (new String(data, 0, packet.getLength()).equals("TERMINATE")) {
+				//w.write(m,0,m.length());
+				//data = packet.getData();
+				
+				
+				//if (m.equals("TERMINATE")) {
+				if (m.indexOf("TERMINATE") > 0){
 					System.out.println("Found end of file.");
 					break;
 				}
-				fout.write(data, 0, packet.getLength()); 
+				byte[] m2 = m.getBytes();
+				fout.write(m2, 0,m2.length); 
 				fout.flush(); 
-				zout.write(data, 0, packet.getLength());
+				//zout.writeBytes(m2, 0, m2.length);
 				//write bytes to the file 
-				System.out.println("Wrote packet #" + count);
-				count++;
+				//System.out.println("Wrote packet #" + count);
+				//count++;
 			}
 			zout.closeEntry();
 			zout.close();
 			fout.close(); 
+			w.close();
+			r.close();
+			c.close();
+			s.close();
 			System.out.println("Finished method");
 		}
 		/* NOT REACHED */
+	} catch(Exception e){
+		System.err.println(e.toString());
+	}
 	}
 }
 
