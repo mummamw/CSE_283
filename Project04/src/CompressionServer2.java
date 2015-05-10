@@ -21,7 +21,7 @@ public class CompressionServer {
 		String ksName = "keystore.jks";
 		char ksPass[] = "password".toCharArray();
 		char ctPass[] = "password".toCharArray();
-		//try { //Don't Try just do. - random insparastion
+		//try { //Don't Try just do. 
 			KeyStore ks = KeyStore.getInstance("JKS");
 			ks.load(new FileInputStream(ksName), ksPass);
 			KeyManagerFactory kmf = KeyManagerFactory.getInstance("SunX509");
@@ -29,11 +29,12 @@ public class CompressionServer {
 			SSLContext sc = SSLContext.getInstance("SSL");
 			sc.init(kmf.getKeyManagers(), null, null);
 
-			SSLServerSocketFactory ssf = sc.getServerSocketFactory();
 
+		//Server Socket Created
+			SSLServerSocketFactory ssf = sc.getServerSocketFactory();
 			int servPort = Integer.parseInt(args[0]);
 			SSLServerSocket s = (SSLServerSocket) ssf.createServerSocket(servPort);
-
+		//Socket created from the ServerSocket
 			SSLSocket c = (SSLSocket) s.accept();
 
 		//moved above into clreating SSLSocket section
@@ -82,24 +83,3 @@ public class CompressionServer {
 }
 
 
-
-
-
-/* HOW TO DO UDP CLIENT 
- * InetAddress serverAddress = InetAddress.getLocalHost(); 
- * int servPort = 5000; 
- * DatagramSocket socket = new DatagramSocket();
- * String filename = "test.txt"; 
- * byte[] buf = filename.getBytes(); 
- * DatagramPacket sendpacket  = new DatagramPacket(buf, 0, buf.length, serverAddress, servPort);
- * packet.send(sendPacket); 
- * while(true){
- * 		sendPacket.setData(buf, offset, 1024); //must increment the offset but I don't know how?
- * 		socket.send(sendPacket); 
- * 		if(offset is something???) {
- * 			break; 
- * 		}
- * 		Thread.sleep(milliseconds); //delay so that it doesn't over flow the file output stream 
- * }
- * socket.close();
- * */	
