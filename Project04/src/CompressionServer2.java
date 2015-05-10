@@ -11,9 +11,13 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
+import java.io.*;
+import java.net.*;
+import java.security.*;
+import javax.net.ssl.*;
 
 
-public class CompressionServer {
+public class CompressionServer2 {
 	
 	private static final int ECHOMAX = 65535 ;  // Maximum size of echo datagram
 	public static void main(String[] args) throws IOException {
@@ -36,6 +40,9 @@ public class CompressionServer {
 			SSLServerSocket s = (SSLServerSocket) ssf.createServerSocket(servPort);
 		//Socket created from the ServerSocket
 			SSLSocket c = (SSLSocket) s.accept();
+		//Creating Buffered reader and writer as input streams
+		BufferedWriter w = new BufferedWriter(new OutputStreamWriter(c.getOutputStream()));
+		BufferedReader r = new BufferedReader(new InputStreamReader(c.getInputStream()));
 
 		//moved above into clreating SSLSocket section
 		//int servPort = Integer.parseInt(args[0]);
@@ -43,9 +50,9 @@ public class CompressionServer {
 		//DatagramSocket socket = new DatagramSocket(servPort);
 	
 		DatagramPacket packet = new DatagramPacket(new byte[ECHOMAX], ECHOMAX);
-		
+		//test
 		for (;;) {  // Run forever, receiving and echoing datagrams
-			socket.receive(packet);     // Receive packet from client       
+			//socket.receive(packet);     // Receive packet from client       
 			byte[] data = packet.getData(); //gives you a byte array of sent info
 			String fileName = new String(data, 0, packet.getLength());
 			System.out.println("Received file: " + fileName);
