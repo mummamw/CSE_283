@@ -30,7 +30,7 @@ public class CompressionServer {
 			sc.init(kmf.getKeyManagers(), null, null);
 
 
-		//Server Socket Created
+		//Server Socket Created5
 			SSLServerSocketFactory ssf = sc.getServerSocketFactory();
 			int servPort = Integer.parseInt(args[0]);
 			SSLServerSocket s = (SSLServerSocket) ssf.createServerSocket(servPort);
