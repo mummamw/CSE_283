@@ -4,6 +4,8 @@ import java.util.*;
 import java.security.*;
 import javax.net.ssl.*;
 
+import java.security.cert.X509Certificate;
+
 final class HttpRequest implements Runnable {
 	final static int BUF_SIZE = 1024000;
 	final static String CRLF = "\r\n";
@@ -37,8 +39,6 @@ final class HttpRequest implements Runnable {
 			System.out.println(msg);
 			total += rcv;
 			
-			// Only loop if it is not a GET message and have not reached
-			// end of POST message, Upload+CRLF represents end of request
 			if (msg.startsWith("GET") || msg.indexOf("Upload"+CRLF) != -1) {
 				System.out.println("EXITING");
 				break;
@@ -48,38 +48,7 @@ final class HttpRequest implements Runnable {
 		return total;
 	}
 
-    private void compressionSend(String fileName, byte[] data) throws Exception {
-		int port = 5000;
-
-		InetAddress address = InetAddress.getLocalHost();
-
-		DatagramSocket compServer = new DatagramSocket();
-		DatagramPacket packet = new DatagramPacket(fileName.getBytes(), 0, fileName.length(), address, port);
-		compServer.send(packet);
-
-		int offset = 0;
-		int count = 1;
-
-		while (true) {
-			if (offset + 1024 > data.length) {
-				packet.setData(data, offset, data.length - offset);
-			} else {
-				packet.setData(data, offset, 1024);
-			}
-			compServer.send(packet);
-			System.out.println("Packet #" + count + " sent");
-			count++;
-			if (offset + 1024 > data.length) {
-				//"MAGIC String" This is like the lab when we were sending the end
-				packet.setData(new String("Terminate").getBytes(), 0, 9);
-				compServer.send(packet);
-				break;
-			}
-			offset += 1024;
-			
-			Thread.sleep(50);
-		}
-	}
+	//Compresion send no longer here, in BackupCode
 
 	private void processRequest() throws Exception {
 
@@ -91,8 +60,6 @@ final class HttpRequest implements Runnable {
 		DataOutputStream os = new DataOutputStream(socket.getOutputStream());
 
 		// Set up input stream filters.
-		// BufferedReader br = new BufferedReader(new InputStreamReader(is));
-		
 		BufferedReader br = new BufferedReader(new InputStreamReader(is,"US-ASCII"));
 		
 		int byteCount = 0;
@@ -100,7 +67,6 @@ final class HttpRequest implements Runnable {
 		// Get the request line of the HTTP request message.
 		String requestLine = br.readLine();
 		byteCount += requestLine.length() + 2;       //Difference from main code
-
 		// Extract the filename from the request line.
 		StringTokenizer tokens = new StringTokenizer(requestLine);
 		String method = tokens.nextToken(); // skip over the method, which
@@ -136,9 +102,6 @@ final class HttpRequest implements Runnable {
 				}
 			}
 
-
-
-				//br.reset();
 			is =  new ByteArrayInputStream(buffer, byteCount, dataLength);
 			br = new BufferedReader(new InputStreamReader(is, "US-ASCII"));
 
@@ -171,14 +134,13 @@ final class HttpRequest implements Runnable {
 			System.out.println(postFileContents);
 			System.out.println(numLines + " " + delim + " " + dataLength);
 			int postFileContentLength = postFileContents.length();
-			String postFileName = postData[1].substring(postData[1]
-					.indexOf("destination\"") + "destination\"".length());
+			String postFileName = postData[1].substring(postData[1].indexOf("destination\"") + "destination\"".length());
 			
 			byte[] postDataBytes = Arrays.copyOfRange(buffer,
 					byteCount + bodyStart + 1,
 					byteCount + bodyStart  + 1 + postFileContentLength + numLines);
 			
-			compressionSend(postFileName, postDataBytes);
+			sendPostToCompression(postFileName, postDataBytes);
 		}
 		
 
@@ -203,6 +165,12 @@ final class HttpRequest implements Runnable {
 		if (fileExists) {
 			statusLine = "HTTP/1.0 200 OK" + CRLF;
 			contentTypeLine = "Content-Type: " + contentType(fileName) + CRLF;
+		} else if (method.equals("POST")) {
+			statusLine = "HTTP/1.0 200 OK" + CRLF;
+			contentTypeLine = "Content-Type: text/html" + CRLF;
+			entityBody = "<HTML>"
+					+ "<HEAD><TITLE>File Uploaded Successful</TITLE></HEAD>"
+					+ "<BODY>File Upload Successful</BODY></HTML>";
 		} else {
 			statusLine = "HTTP/1.0 404 Not Found" + CRLF;
 			contentTypeLine = "Content-Type: text/html" + CRLF;
@@ -231,6 +199,43 @@ final class HttpRequest implements Runnable {
 		br.close();
 		socket.close();
 	}
+
+	private void sendPostToCompression(String fileName, byte[] data)
+			throws Exception {
+		int port = 5000;
+		InetAddress address = InetAddress.getLocalHost();
+		// Create a trust manager that does not validate certificate chains
+		TrustManager[] trustAllCerts = new TrustManager[] { new X509TrustManager() {
+			public java.security.cert.X509Certificate[] getAcceptedIssuers() {
+				return new X509Certificate[0];
+			}
+
+			public void checkClientTrusted(
+					java.security.cert.X509Certificate[] certs, String authType) {
+			}
+
+			public void checkServerTrusted(
+					java.security.cert.X509Certificate[] certs, String authType) {
+			}
+		} };
+		try {
+			SSLContext sc = SSLContext.getInstance("SSL");
+			sc.init(null, trustAllCerts, new java.security.SecureRandom());
+			SSLSocketFactory f = (SSLSocketFactory) sc.getSocketFactory();
+			SSLSocket c = (SSLSocket) f.createSocket(address, port);
+			c.startHandshake();
+			OutputStream ow = c.getOutputStream();
+			String header = fileName + " " + data.length + "\n";
+			ow.write(header.getBytes(), 0, header.length());
+			ow.write(data, 0, data.length);
+			ow.flush();
+			ow.close();
+			
+			c.close();
+		} catch (Exception e) {
+			System.err.println(e.toString());
+		}
+	}	
 
 	private static void sendBytes(FileInputStream fis, OutputStream os)
 			throws Exception {
@@ -266,7 +271,7 @@ final class HttpRequest implements Runnable {
 
 public final class WebServer {
 	public static void main(String argv[]) throws Exception {
-		// Get the port number from the command line.
+		//6789 for project
 		int port = Integer.parseInt(argv[0]);
 
 		String ksName = "keystore.jks";
@@ -284,28 +289,24 @@ public final class WebServer {
 			SSLServerSocket s = (SSLServerSocket) ssf.createServerSocket(port);
 
 			while (true) {
-			// Listen for a TCP connection request.
-			SSLSocket c = (SSLSocket) s.accept();
+				// Listen for a TCP connection request.
+				SSLSocket c = (SSLSocket) s.accept();
 
-			// Construct an object to process the HTTP request message.
-			HttpRequest request = new HttpRequest(c);
+				// Construct an object to process the HTTP request message.
+				HttpRequest request = new HttpRequest(c);
 
-			// Create a new thread to process the request.
-			Thread thread = new Thread(request);
+				// Create a new thread to process the request.
+				Thread thread = new Thread(request);
 
-			// Start the thread.
-			thread.start();
+				// Start the thread.
+				thread.start();
 			}
 
 			//BufferedWriter w = new BufferedWriter(new OutputStreamWriter(c.getOutputStream()));
 			//BufferedReader r = new BufferedReader(new InputStreamReader(c.getInputStream()));
-			} catch (Exception e) {
+		} catch (Exception e) {
 			System.out.println(e);
 		}
-
-		
-
-		// Process HTTP service requests in an infinite loop.
-		
+			// Process HTTP service requests in an infinite loop.
 	}
 }
